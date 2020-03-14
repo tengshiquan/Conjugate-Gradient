@@ -5,6 +5,7 @@ import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 from IPython.display import display
 import ipywidgets as ipw
+import math
 
 
 def f(x, A, b, c):
@@ -1444,5 +1445,105 @@ def figload(num, figsize):
     plt.imshow(np.asarray(image))
     plt.axis('off')
 
+
+def plotcontours_eigen(A, b, c, fig=None, pltrange=(-4, 6, -6, 4, 20)):
+    if fig == None:
+        fig = plt.figure(figsize=(8, 8), num='plotcontours_eigen')
+    size = pltrange[4]
+    x1 = np.linspace(pltrange[0], pltrange[1], size)
+    x2 = np.linspace(pltrange[2], pltrange[3], size)
+    x1, x2 = np.meshgrid(x1, x2)
+    zs = np.zeros((size, size))
+    for i in range(size):
+        for j in range(size):
+            x = np.matrix([[x1[i, j]], [x2[i, j]]])
+            zs[i, j] = f(x, A, b, c)
+    cp = plt.contour(x1, x2, zs, 20)
+    plt.clabel(cp, inline=1, fontsize=10)
+    plt.text(pltrange[0], pltrange[3] + 0.2, r'$x_2$', fontsize=20)
+    plt.text(pltrange[1] + 0.2, pltrange[2], r'$x_1$', fontsize=20)
+
+    #
+    xl = 0
+    xr = 5
+    yl = -(6 - xl * 2) / 1
+    yr = -(6 - xr * 2) / 1
+    plt.plot([xl, xr], [yl, yr], color='g', linestyle='-', linewidth=2)
+
+    xl = -4
+    xr = 6
+    yl = -(2 + xl * 1) / 2
+    yr = -(2 + xr * 1) / 2
+    plt.plot([xl, xr], [yl, yr], color='b', linestyle='-', linewidth=2)
+
+    plt.show()
+
+if __name__ == '__main__':
+
+
+    # 利用numpy 计算特征值 特征向量
+
+    A = np.matrix([[3.0, 2.0], [2.0, 6.0]])
+    b = np.matrix([[2.0], [-8.0]])
+    c = 0.0
+    x = np.matrix([[2], [-2]])
+
+    # f(x) = 1/2*(3*x1*x1 + 6*x2*x2 + 4*x1*x2) -2*x1 + 8*x2
+
+    eigenvalue, featurevector = np.linalg.eig(A)
+    print ("原始矩阵的特征值")
+    print ("eigenvalue=", eigenvalue)
+    print("featurevector=", featurevector)
+    # 7, (1, 2)
+    # 2, (-2, 1)
+
+    # 经过极值点的 沿着特征向量 的直线方程为
+    #   2(x1-2) - (x2 +2) = 0
+    #   (x1-2) + 2(x2 +2) = 0
+    #
+
+    # 代入 f(x)
+    #  对于7的, 消去x2 , f = 35/2*x*x-70*x+60   求方向导数    f' = 35*x - 70
+    #  对于2的, 消去x2, f = 5/4*x*x-5*x -5 求方向导数    f' = 5/2 * x - 5
+
+    # f(x) = 0 与  两条 特征向量 焦点 的 x1取值
+    from sympy import *
+    x = symbols('x')
+    print(solve(35/2*x*x-70*x+60, x))
+    print(solve(5/4*x*x-5*x-5, x))
+
+
+    # plotcontours_eigen(A, b, c)
+
+    def fig12(A, b, c):
+        fig = plt.figure(figsize=(8, 8), num='Figure 12')
+        ax = fig.add_subplot(1, 1, 1)
+        plotcontours(A, b, c, fig)
+        plt.text(1, -2, '2', fontsize=18)
+        plt.text(2.5, -1.5, '7', fontsize=18)
+        ax.arrow(2, -2, 0, 1, color='k', lw=1, width=.005)
+        ax.arrow(2, -2, 1, 2, color='k', lw=1, width=.005)
+        plt.axis([-4, 6, -6, 4])
+        plt.show()
+
+
+    def fig16():
+        A = np.matrix([[3.0, 2.0], [2.0, 6.0]])
+        b = np.matrix([[2.0], [-8.0]])
+        v1 = np.matrix([[2.], [-1]])
+        v2 = np.matrix([[1.], [2.]])
+        fig = plt.figure(figsize=(8, 8), num='Figure 16')
+        ax = fig.add_subplot(1, 1, 1)
+        plotcontours(A, b, 0, fig)
+        ax.arrow(2, -2, 1.4 * v1[0, 0], 1.4 * v1[1, 0], head_width=.2, head_length=.3, length_includes_head=True,
+                 color='k')
+        ax.arrow(2, -2, .75 * v2[0, 0], .75 * v2[1, 0], head_width=.2, head_length=.3, length_includes_head=True,
+                 color='k')
+        plt.axis([-4, 6, -6, 4])
+
+        plt.show()
+
+    # fig12(A, b, c)
+    # fig16()
 
 
